@@ -17,14 +17,14 @@ Date of create: 24.10.2022
 Date of finished: TBD
 
 # Progress of work
-##1. Minikube installation
+## 1. Minikube installation
 
 Firstly, minikube was installed by installation guide from the official site: https://minikube.sigs.k8s.io/docs/start/
 After installation, minikube cluster was started by docker driver
 
 ![img.png](images/img.png)
 
-##2. Creation and applying of the manifest
+## 2. Creation and applying of the manifest
 
 Further it was necessary to create pod manifest and apply it for kubernetes cluster. 
 
@@ -47,7 +47,7 @@ spec:
 Then a pod manifest was applied and pod existence was validated:
 ![img_1.png](images/img_1.png)
 
-##3. Creation of the service and forwarding the service port
+## 3. Creation of the service and forwarding the service port
 
 After the creation of pod, pod service was created and its port was forwarded from the cluster
 ![img_2.png](images/img_2.png)
@@ -55,11 +55,12 @@ After the creation of pod, pod service was created and its port was forwarded fr
 Access to the Vault was checked: 
 ![img_3.png](images/img_3.png)
 
-##4. Authenticate to Vault
+## 4. Authenticate to Vault
 
 For authentication, Vault token is required, it could be found on logs of Vault Pod. Vault log was accessed 
 via Kubernetes dashboard:
 
+![img.png](images/img_8.png)
 ![img_4.png](images/img_4.png)
 ![img_5.png](images/img_5.png)
 
@@ -67,6 +68,6 @@ Authentication succeeded:
 
 ![img_6.png](images/img_6.png)
 
-##5. Overall system diagram
+## 5. Overall system diagram
 
 ![img_7.png](images/img_7.png)
