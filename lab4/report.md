@@ -19,15 +19,15 @@ Date of finished: TBD
 # Progress of work
 ## 1. Create cluster
 Two-nodes cluster was created with the following commands:
-![img_1.png](img_1.png)
+![img_1.png](images/img_1.png)
 
 ## 2. Configure calico with manifest
 
-![img_2.png](img_2.png)
+![img_2.png](images/img_2.png)
 
 ## 3. Delete default IP Pool
 
-![img_3.png](img_3.png)
+![img_3.png](images/img_3.png)
 
 ## 4. Create the IP Pool manifests
 
@@ -56,7 +56,7 @@ spec:
 ```
 
 ## 5. Label the nodes and apply Pool manifests
-![img_4.png](img_4.png)
+![img_4.png](images/img_4.png)
 
 ## 6. Create and apply Deployment and Service manifest
 Deployment manifest:
@@ -122,16 +122,16 @@ minikube tunnel
 
 The application was accessed via tunnel:
 
-![img_8.png](img_8.png)
+![img_8.png](images/img_8.png)
 
-![img_7.png](img_7.png)
+![img_7.png](images/img_7.png)
 
 In case of connection to different Pods, IP addresses are matched to different Pools. That means, the pods are deployed 
 to different nodes, and pools are assigned correctly.
 
 Then, the opportunity of one Pod connection to another was investigated:
-![img_9.png](img_9.png)
+![img_9.png](images/img_9.png)
 
 ## 7. Overall system diagram
 
-![img_11.png](img_11.png)
+![img_11.png](images/img_11.png)

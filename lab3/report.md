@@ -119,12 +119,12 @@ minikube addons enable ingress-dns
 ```
 
 The following line was added to hosts Windows file for enabling access to tunnel via domain name:
-![img_2.png](img_2.png)
+![img_2.png](images/img_2.png)
 
 ## 4. Apply the manifests
 
 The whole manifests were applied to cluster:
-![img_1.png](img_1.png)
+![img_1.png](images/img_1.png)
 
 ## 5. Create the tunnel
 When ingress created, it will be necessary to create the tunnel via the following command:
@@ -136,12 +136,12 @@ minikube tunnel
 
 The application was accessed via configured domain name localhost-kirill.com:
 
-![img_4.png](img_3.png)
+![img_4.png](images/img_3.png)
 
 Certificate data:
 
-![img.png](img.png)
+![img.png](images/img.png)
 
 ## 7. Overall system diagram
 
-![img_4.png](img_4.png)
+![img_4.png](images/img_4.png)
