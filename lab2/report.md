@@ -53,7 +53,7 @@ spec:
 ```
 Port of the web server was found from after preliminary Deployment logs on Kubernetes dashboard
 
-![img.png](img.png)
+![img.png](images/img.png)
 
 ## 2. Creation of the service manifest
 
@@ -74,14 +74,14 @@ spec:
 
 ## 3. Apply the created manifest
 
-![img_1.png](img_1.png)
+![img_1.png](images/img_1.png)
 
 ## 4. Open the server local address in browser
 
-![img_2.png](img_2.png)
+![img_2.png](images/img_2.png)
 
 Values of the environment variables could be seen in web page
 
 ## 5. Overall system diagram
 
-![img_3.png](img_3.png)
+![img_3.png](images/img_3.png)
