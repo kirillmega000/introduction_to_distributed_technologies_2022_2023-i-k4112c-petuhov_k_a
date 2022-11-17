@@ -134,4 +134,4 @@ Then, the opportunity of one Pod connection to another was investigated:
 
 ## 7. Overall system diagram
 
-![img_10.png](img_10.png)
+![img_11.png](img_11.png)
