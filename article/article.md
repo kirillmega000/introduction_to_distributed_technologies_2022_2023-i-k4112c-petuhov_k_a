@@ -1,4 +1,5 @@
 # Scheduling control in Kubernetes
+![img.png](img.png)
 
 This article is intended to overview the capabilities of Scheduling Kubernetes process management and describe, how
 their
@@ -18,7 +19,7 @@ nodes,
 according to the pods resource requirements. Basic scheduler can be replaced with the custom one. It could
 be written manually, the main requirement is compliance to the specific API. You can see the
 example [here](https://developer.ibm.com/articles/creating-a-custom-kube-scheduler/).
-Otherwise, in this article will be described only capabilities of the kube-scheduler.
+Otherwise, in this article will be described only the capabilities of the kube-scheduler.
 
 ## Why it is important?
 
@@ -26,10 +27,26 @@ As it was said before, Kubernetes can perform the scheduling without extra instr
 configuration
 of the scheduling may significantly increase the security, reliance and fault tolerance of the cluster.
 
+## NodeName
+
+`nodeName` is the way to place Pod under the certain Node by it's name. This approach ignores the other scheduling settings.
+If the Node with specified name doesn't exist or hasn't available resources, the Pod won't eun. Example of `nodeName` usage:
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: nginx
+spec:
+  containers:
+  - name: nginx
+    image: nginx
+  nodeName: node-1
+```
+
 ## Taints and toleration
 
-A taint is a node setting that allows to block it from adding pods. This mechanism can be used, for example, to reserve
-a node for a future cluster extending, if it is planned.
+A taint is a node setting that allows to block it from adding Pods. This mechanism can be used, for example, to reserve
+a Node for a future cluster extending, if it is planned.
 
 The taint to the node `exNode` with `key=exKey`, `value=exValue` and `exEffect` effect can be added using the following
 command:
@@ -51,7 +68,7 @@ Following command will remove the taint from node:
 kubectl taint nodes exNode exKey=exValue:exEffect-
 ```
 
-Tolerations are applied to pods. Toleration allows a pod to overcome the node taint. It is added to `spec.tolerations`
+Tolerations are applied to Pods. Toleration allows a Pod to overcome the Node taint. It is added to `spec.tolerations`
 Pod
 manifest part.
 
@@ -80,7 +97,7 @@ A toleration "matches" a taint if the keys are the same and the effects are the 
 ## NodeSelector and nodeAffinity
 
 `NodeSelector` is the simplest approach for the allocation management. It is a part of Pod manifest and describes
-the labels of nodes, where the Pod can be placed, in key-value mapping format. Example:
+the labels of Nodes, where the Pod can be placed, in key-value mapping format. Example:
 
 ```yaml
 apiVersion: v1
@@ -168,4 +185,129 @@ devices may be used for the important high-loaded component, outdated - for rare
 ##  PodAffinitty and PodAntiAffinitty
 
 Working principle of `podAffinity` and `podAntiAffinity` are the similar to `nodeAffinity`, but describe the rules
-based on the labels of Pods, already existing in the cluster
+based on the labels of Pods, already existing in the cluster. 
+
+The structure of the configuration is the following: 
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: { name }
+spec:
+  affinity:
+    podAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+      - labelSelector:
+          matchExpressions:
+          - key: { podAffinityKey }
+            operator: { podAffinityOperator }
+            values:
+            - { values }
+        topologyKey: { topologyKey }
+    podAntiAffinity:
+      preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 100
+        podAffinityTerm:
+          labelSelector:
+            matchExpressions:
+            - key: { podAntiAffinityKey }
+              operator: { podAntiAffinityOperator }
+              values:
+              - { values }
+          topologyKey: { topologyKey }
+  containers:
+  - name: { containerName }
+    image: { containerImage}
+```
+
+`podAffinity` places the Pods on Node with another matching the expressions in `labelSelector`, `podAntiAffinity` is opposite.
+`In`, `NotIn`, `Exists` and `DoesNotExist` operators are supported for `podAffinity` and `podAntiAffinity`.
+
+The obvious example of `podAffinity` and `podAntiAffinity` usage is avoid placing the each Pod of Deployment in a single node.
+It a single node breaks, it will be guaranteed, that there are another replicas of Deployment on some other nodes, and the system
+workability won't be lost. It can be made with the following example: 
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web-server-2
+  labels:
+    app: web-server-2
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: web-server-2
+  template:
+    metadata:
+      labels:
+        app: web-server-2
+    spec:
+      containers:
+        - name: web-server-2
+          image: ifilyaninitmo/itdt-contained-frontend:master
+          ports:
+            - containerPort: 3000
+          envFrom:
+            - configMapRef:
+                name: env-config
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchExpressions:
+                  - key: app
+                    operator: In
+                    values:
+                      - web-server-2
+              topologyKey: "topology.kubernetes.io/zone"
+```
+
+Nodes can be divided into domains. The domain is determined by the value of special system Kubernetes label, 
+e.g. `topology.kubernetes.io/zone`. Domain can be a certain region, zone, rack ... The nodes with the same label values
+are belonging to the same domains. If `topologyKey` is specified, the `podAffinity` and `podAntiAffinity` spread the  
+Pods and find the existing by Domains instead of single Nodes, value of `topologyKey` is the name of node label, the domains
+topology is organized by. You can read about domains in details [here](https://kubernetes.io/docs/reference/labels-annotations-taints/#topologykubernetesiozone).
+
+## Spread topology constraints
+
+Pod affinity and anti-affinity rules functionality is not applicable when there is a task to spread an arbitrary number 
+of pods between few domains. The only way was to develop the custom scheduler to replace the default.
+Spread topology constraints were introduced in 1.16 Kubernetes version. This configuration allow to distribute
+the Pods evenly between the Domains. Example of usage with explanation of main fields meaning:
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: myapp
+  labels:
+    app: myapp
+spec:
+  # Configure a topology spread constraint
+  topologySpreadConstraints:
+    - maxSkew: 1 # Maximum permitted difference in the number of Pods between the Domains
+      topologyKey: topology.kubernetes.io/zone # Name of system node label, by which the domains are organized
+      whenUnsatisfiable: DoNotSchedule # What to do if there is no suitable Domain: DoNotSchedule/ScheduleAnyway 
+      labelSelector: # Name of label, by which the Pods are distributed
+        matchLabels:
+          app: myapp
+```
+You can read more about Topology spread constraints [here](https://kubernetes.io/docs/concepts/scheduling-eviction/topology-spread-constraints/).
+
+## Priority of configurations
+
+The most prioritized rule is NodeName, it ignores the other Scheduler configurations. Then, the taints block Node from Pods, 
+which haven't appropriate toleration's. Finally, the all remaining rules (Node selector, Node affinity, Pod-affinity ...)
+must be equally followed.
+
+## References
+
++ https://redhat-scholars.github.io/kubernetes-tutorial/kubernetes-tutorial/taints-affinity.html
++ https://docs.openshift.com/container-platform/3.11/admin_guide/scheduling/index.html
++ https://kubernetes.io/docs/tasks/configure-pod-container/assign-pods-nodes/
++ https://kubernetes.io/docs/concepts/scheduling-eviction/
++ https://komodor.com/learn/node-affinity/
++ https://www.densify.com/kubernetes-autoscaling/kubernetes-affinity
+
+
+
